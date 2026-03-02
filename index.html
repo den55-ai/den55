@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Den"s Hacker site</title>
+    <style>
+        :root {
+            --mono-main: #999999;
+            --mono-glow: #ffffff;
+            --dark-bg: #050505;
+            --terminal-bg: rgba(5, 5, 5, 0.95);
+        }
+
+        /* --- HACKER CURSOR --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+
+        #custom-cursor {
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--mono-glow);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease-out, width 0.3s, height 0.3s, background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #custom-cursor::after {
+            content: '';
+            width: 2px;
+            height: 2px;
+            background: var(--mono-glow);
+            border-radius: 50%;
+        }
+
+        /* Cursor interaction state */
+        .cursor-hover {
+            width: 40px !important;
+            height: 40px !important;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--mono-glow);
+            box-shadow: 0 0 15px var(--mono-glow);
+        }
+
+        /* --- REST OF THE STYLES --- */
+        body {
+            background-color: var(--dark-bg);
+            color: var(--mono-main);
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        #matrix-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; opacity: 0.2;
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            pointer-events: none; z-index: 1000;
+        }
+
+        nav {
+            position: fixed; top: 0; width: 100%; padding: 20px;
+            background: rgba(0, 0, 0, 0.9); border-bottom: 1px solid var(--mono-main);
+            display: flex; justify-content: space-between; z-index: 100;
+            align-items: center;
+        }
+
+        .nav-links a { 
+            color: var(--mono-main); text-decoration: none; 
+            margin-left: 20px; font-size: 0.75rem; font-weight: bold;
+            border: 1px solid transparent; padding: 5px 10px; transition: 0.3s;
+        }
+
+        .nav-links a:hover { 
+            border: 1px solid var(--mono-glow); background: var(--mono-glow); 
+            color: black; box-shadow: 0 0 15px var(--mono-glow);
+        }
+
+        section { padding: 100px 20px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+
+        .hero { justify-content: center; text-align: center; }
+        .hero h1 { 
+            font-size: 8vw; color: white; letter-spacing: 15px;
+            text-shadow: 0 0 20px var(--mono-glow); animation: glitch 4s infinite;
+        }
+
+        #terminal-container {
+            width: 100%; max-width: 800px; height: 400px;
+            background: var(--terminal-bg); border: 1px solid var(--mono-main);
+            padding: 20px; overflow-y: auto; box-shadow: 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .terminal-output { white-space: pre-wrap; margin-bottom: 15px; font-size: 0.85rem; }
+        .terminal-input-line { display: flex; border-top: 1px solid #222; padding-top: 10px; }
+        .terminal-input-line input {
+            background: transparent; border: none; color: white;
+            font-family: inherit; width: 100%; outline: none;
+        }
+
+        .image-box { 
+            width: 100%; max-width: 800px; margin: 30px 0; border: 1px solid var(--mono-main);
+            filter: grayscale(1) contrast(1.2); transition: 0.5s;
+        }
+        .image-box img { width: 100%; display: block; }
+        .image-box:hover { filter: grayscale(0) brightness(1.1); box-shadow: 0 0 20px var(--mono-glow); }
+
+        .social-btn {
+            display: inline-block; margin: 10px; padding: 10px 20px;
+            border: 1px solid var(--mono-main); color: var(--mono-main);
+            text-decoration: none; font-size: 0.8rem; transition: 0.3s;
+        }
+        .social-btn:hover { background: white; color: black; box-shadow: 0 0 10px white; }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: skew(0); }
+            92% { transform: skew(5deg); text-shadow: -2px 0 #555; }
+            95% { transform: skew(-5deg); text-shadow: 2px 0 #fff; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="custom-cursor"></div>
+
+    <canvas id="matrix-canvas"></canvas>
+    <div class="scanlines"></div>
+
+    <nav>
+        <div class="logo">ID: DEN55_SYSTEM</div>
+        <div class="nav-links">
+            <a href="https://instagram.com/den.55.ned.ai" target="_blank">IG</a>
+            <a href="https://github.com/den55-ai" target="_blank">GIT</a>
+            <a href="mailto:den.55.ned.ai@gmail.com">MAIL</a>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <h1>DEN55</h1>
+        <p id="boot-text">_</p>
+    </section>
+
+    <section id="about" class="reveal">
+        <h2>[ ACCESS_DATA: WHOAMI ]</h2>
+        <div class="image-box">
+            <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200" alt="Interface">
+        </div>
+        <p style="max-width: 600px; text-align: center; margin-bottom: 20px;">
+            Hacker-theme interface developed by Den55. Integrated systems online.
+        </p>
+        <div>
+            <a href="https://github.com/den55-ai" class="social-btn">GITHUB_REPO</a>
+            <a href="https://instagram.com/den.55.ned.ai" class="social-btn">INSTAGRAM_INTEL</a>
+        </div>
+    </section>
+
+    <section id="terminal-section" class="reveal">
+        <h2>[ COMMAND_LINE_INTERFACE ]</h2>
+        <div id="terminal-container">
+            <div id="output" class="terminal-output">System initialized...<br>Logged in as: den55-ai<br>Type 'links' or 'whoami' to start.</div>
+            <div class="terminal-input-line">
+                <span style="color:var(--mono-main); margin-right:10px;">root@den55:~$</span>
+                <input type="text" id="command-input" autofocus>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // 1. Cursor Logic
+        const cursor = document.getElementById('custom-cursor');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Add hover effect to all clickable elements
+        const targets = document.querySelectorAll('a, input, .social-btn, .image-box');
+        targets.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
+        });
+
+        // 2. Matrix Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const drops = Array(Math.floor(canvas.width/16)).fill(1);
+        function draw() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#444";
+            ctx.font = "16px monospace";
+            drops.forEach((y, i) => {
+                const text = Math.floor(Math.random()*2);
+                ctx.fillText(text, i*16, y*16);
+                if (y*16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+        setInterval(draw, 35);
+
+        // 3. Terminal
+        const input = document.getElementById('command-input');
+        const output = document.getElementById('output');
+        const commands = {
+            'links': 'GITHUB: github.com/den55-ai\nINSTA: @den.55.ned.ai\nMAIL: den.55.ned.ai@gmail.com',
+            'whoami': 'User: den55\nSystem: den.55.ned.ai\nStatus: Authorized',
+            'help': 'Commands: links, whoami, clear, contact',
+            'contact': 'Redirecting to: den.55.ned.ai@gmail.com',
+            'clear': ''
+        };
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value.toLowerCase().trim();
+                if (val === 'clear') output.innerHTML = 'Terminal Reset.';
+                else if (commands[val]) output.innerHTML += `<br>> ${val}<br>${commands[val]}`;
+                else output.innerHTML += `<br>> ${val}<br>Command rejected.`;
+                input.value = '';
+                document.getElementById('terminal-container').scrollTop = 10000;
+            }
+        });
+
+        // 4. Reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); });
+        });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // 5. Typewriter
+        const txt = "ESTABLISHING SECURE CONNECTION... WELCOME BACK, Den55.";
+        let x = 0;
+        function type() {
+            if (x < txt.length) {
+                document.getElementById('boot-text').innerHTML += txt.charAt(x);
+                x++; setTimeout(type, 50);
+            }
+        }
+        type();
+    </script>
+</body>
+</html>
